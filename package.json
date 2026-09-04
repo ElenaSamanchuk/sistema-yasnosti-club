@@ -1,0 +1,14 @@
+{
+  "name": "sistema-yasnosti-club",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Система ясности — Аудиоклуб: сборка блоков для Тильды",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-tilda.mjs --music=assets/audio/satie-gymnopedie-1.mp3",
+    "serve": "npx serve -l 5567 ."
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

@@ -4,12 +4,12 @@
  *
  * Вход:  source/*.html (берётся последний по имени) или путь к файлу первым аргументом.
  * Выход:
- *   assets/img/<роль>-<hash>.webp             картинки (в исходнике были base64 внутри JS)
- *   assets/tilda/sya-audioclub.<hash>.css      CSS, обёрнутый в .sya (без утечки на Тильду)
- *   assets/tilda/sya-audioclub.<hash>.js       JS без шапки и футера, картинки с CDN
- *   index.html                                 превью (локально / GitHub Pages)
- *   tilda/sya-audioclub-tilda.html             ОДИН блок T123: всё inline, картинки с jsDelivr
- *   tilda/sya-audioclub-tilda-external.html    блок T123: CSS+JS тоже с jsDelivr (самый лёгкий)
+ *   assets/img/<роль>-<hash>.webp        картинки (в исходнике были base64 внутри JS)
+ *   assets/tilda/<имя>.<hash>.css / .js  минифицированные файлы для CDN и превью
+ *   index.html                           превью (локально / GitHub Pages)
+ *   tilda/1-css.html 2-html.html 3-js.html   три блока T123, вставлять по порядку
+ *   tilda/all-in-one.html                то же одним блоком
+ *   tilda/external.html                  блок T123, CSS и JS с jsDelivr (самый лёгкий)
  *
  * Запуск:  node scripts/build-tilda.mjs [source.html] [--ref=main|<sha>] [--bot=https://t.me/...] [--music=assets/audio/x.mp3] [--clean]
  *   --ref   ветка или коммит для jsDelivr (по умолчанию main)
@@ -24,6 +24,7 @@
  *   • JS: без type=module, в IIFE (никаких глобальных const рядом с jQuery Тильды)
  *   • плеер: иконка паузы вместо play, точка прогресса движется вместе с волной
  *   • плавное появление блоков (IntersectionObserver), точки в конце абзацев снимаются
+ *   • на выходе всё минифицировано esbuild: без комментариев и пустых строк
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -83,6 +84,18 @@ const fail = (msg) => {
 const must = (m, label) => (m ? m : fail(`не найдено: ${label} — присланная сборка изменилась, нужно обновить скрипт`));
 const sha1 = (buf) => crypto.createHash("sha1").update(buf).digest("hex");
 const kb = (n) => (n / 1024).toFixed(1) + " KB";
+
+function esbuild(code, args, label) {
+  const bin = process.env.SYA_ESBUILD || path.join(ROOT, "node_modules/.bin/esbuild");
+  if (!fs.existsSync(bin)) fail("нет esbuild — выполните один раз: npm i");
+  try {
+    return execFileSync(bin, args, { input: code, encoding: "utf8", maxBuffer: 128 * 1024 * 1024 });
+  } catch (e) {
+    fail(`esbuild (${label}): ` + String(e.stderr || e.message).slice(0, 500));
+  }
+}
+const minifyJs = (code) => esbuild(code, ["--minify", "--target=es2020", "--charset=utf8", "--loader=js"], "js").trim();
+const minifyCss = (code) => esbuild(code, ["--minify", "--charset=utf8", "--loader=css"], "css").trim();
 
 // ---------- источник ----------
 const srcArg = args.find((a) => !a.startsWith("--"));
@@ -196,7 +209,7 @@ js = js.replace(appRe, 'R("div",$1,[$2])');
 js = patch(js, new RegExp(`\\b${rootVar}=\\{class:"min-h-screen `), `${rootVar}={class:"`, "min-h-screen у корня");
 
 // 3. точка монтирования — уникальный id внутри страницы Тильды
-js = patch(js, /\.mount\("#app"\)/, `.mount("#${APP_ID}")`, 'mount("#app")');
+js = patch(js, /(\w+\(\w+\))\.mount\("#app"\)/, (m, app) => `__syaMount(${app})`, 'mount("#app")');
 
 // 4. плеер: точка прогресса едет вместе с волной, иконка паузы
 const pcIdx = must(js.match(/\{__name:"PlayerCard"/), "PlayerCard").index;
@@ -227,8 +240,6 @@ if (imgCount < 5) fail("img в шаблонах меньше ожидаемог�
 // 5. ссылка на бота
 if (BOT_URL) js = js.split(JSON.stringify(PLACEHOLDER_BOT)).join(JSON.stringify(BOT_URL));
 else if (js.includes(PLACEHOLDER_BOT)) console.warn(`⚠ в сборке остался плейсхолдер ${PLACEHOLDER_BOT} — задайте --bot=https://t.me/...`);
-
-if (js.includes("</script>")) js = js.split("</script>").join("<\\/script>");
 
 // 6. плеер: прогресс идёт от реального воспроизведения (общее состояние __syaPlayer)
 js = patch(
@@ -262,8 +273,14 @@ const runtime = fs
 const prelude =
   `var __syaBase=window.SYA_ASSET_BASE||${JSON.stringify(CDN)};` +
   `var __syaMusic=${JSON.stringify(MUSIC_URL)};` +
-  `var __syaPlayer={playing:false,progress:function(){return .38}};`;
+  `var __syaPlayer={playing:false,progress:function(){return .38}};` +
+  // блок с разметкой может быть отдельным блоком Тильды и появиться позже скрипта
+  `function __syaMount(app){var n=0;function boot(){var el=document.getElementById(${JSON.stringify(APP_ID)});` +
+  `if(!el)return false;if(el.__sya)return true;el.__sya=1;app.mount(el);__syaRuntime();return true}` +
+  `if(boot())return;document.addEventListener("DOMContentLoaded",boot);` +
+  `var iv=setInterval(function(){if(boot()||++n>200)clearInterval(iv)},50)}`;
 js = `(function(){"use strict";${prelude}\n${js.trim()}\n;${runtime}\n})();`;
+js = minifyJs(js);
 
 // ---------- CSS ----------
 function splitTop(s, sep) {
@@ -337,8 +354,8 @@ const embedCss =
   `${P} .sya-play{cursor:pointer;-webkit-appearance:none;appearance:none;border:0}` +
   `${P} .sya-ico-pause{display:none}${P}[data-sya-playing] .sya-ico-pause{display:block}${P}[data-sya-playing] .sya-ico-play{display:none}` +
   `@media (min-width:64rem){${P} .sya-narrow{max-width:236px}}`; /* только в 4-колоночной сетке */
-css = `${css}\n${embedCss}`;
-if (css.includes("</style")) fail("CSS содержит </style");
+css = minifyCss(`${css}\n${embedCss}`);
+if (css.includes("</style")) fail("CSS содержит </style: инлайн-стиль так не вставить");
 
 // ---------- вывод ----------
 const cssHash = sha1(css).slice(0, 8);
@@ -359,13 +376,21 @@ if (flag("clean")) {
 
 const wrapHtml = `<div id="${WRAP_ID}" class="${SCOPE}"><div id="${APP_ID}"></div></div>`;
 const preloadLinks = (base) => preloads.map((p) => `<link rel="preload" as="image" href="${base}${p}" fetchpriority="high">`).join("");
-const note = (what) => `<!-- Система ясности · Аудиоклуб · ${what} · сборка ${TODAY} · ассеты: ${CDN}assets/ -->`;
+const headTags = (base) => `${FONTS}${preloadLinks(base)}`;
+const styleTag = `<style>${css}</style>`;
+// "</script>" внутри строки бандла закрыл бы тег раньше времени
+const scriptTag = `<script>${js.split("</script>").join("<\\/script>")}</script>`;
 
-const inline = `${note("один блок T123 (HTML-код), вставить целиком")}\n${FONTS}${preloadLinks(CDN)}\n<style>${css}</style>\n${wrapHtml}\n<script>${js}</script>\n`;
-fs.writeFileSync(path.join(ROOT, "tilda", `${NAME}-tilda.html`), inline);
-
-const external = `${note("блок T123, CSS и JS подгружаются с jsDelivr")}\n${FONTS}${preloadLinks(CDN)}\n<link rel="stylesheet" href="${CDN}assets/tilda/${cssFile}">\n${wrapHtml}\n<script src="${CDN}assets/tilda/${jsFile}" defer></script>\n`;
-fs.writeFileSync(path.join(ROOT, "tilda", `${NAME}-tilda-external.html`), external);
+const outputs = {
+  "1-css.html": `${headTags(CDN)}${styleTag}`,
+  "2-html.html": wrapHtml,
+  "3-js.html": scriptTag,
+  "all-in-one.html": `${headTags(CDN)}${styleTag}${wrapHtml}${scriptTag}`,
+  "external.html": `${headTags(CDN)}<link rel="stylesheet" href="${CDN}assets/tilda/${cssFile}">${wrapHtml}<script src="${CDN}assets/tilda/${jsFile}" defer></script>`,
+};
+for (const [file, content] of Object.entries(outputs)) {
+  fs.writeFileSync(path.join(ROOT, "tilda", file), content + "\n");
+}
 
 const index = `<!doctype html>
 <html lang="ru">
@@ -374,7 +399,7 @@ const index = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title.replace(/</g, "&lt;")}</title>
 <meta name="robots" content="noindex">
-${FONTS}${preloadLinks("")}
+${headTags("")}
 <link rel="stylesheet" href="assets/tilda/${cssFile}">
 <style>html,body{margin:0;padding:0;background:#f5f4f2}</style>
 </head>
@@ -389,9 +414,13 @@ fs.writeFileSync(path.join(ROOT, "index.html"), index);
 fs.rmSync(TMP, { recursive: true, force: true });
 
 const size = (p) => kb(fs.statSync(path.join(ROOT, p)).size);
-console.log("\nготово:");
-console.log(`  tilda/${NAME}-tilda.html            ${size(`tilda/${NAME}-tilda.html`)}  ← один блок T123`);
-console.log(`  tilda/${NAME}-tilda-external.html   ${size(`tilda/${NAME}-tilda-external.html`)}  ← CSS+JS с CDN`);
-console.log(`  assets/tilda/${cssFile}   ${size(`assets/tilda/${cssFile}`)}`);
-console.log(`  assets/tilda/${jsFile}    ${size(`assets/tilda/${jsFile}`)}`);
-console.log(`  index.html (превью)`);
+console.log("\nблоки T123 (вставлять по порядку):");
+console.log(`  tilda/1-css.html        ${size("tilda/1-css.html")}\tшрифты, preload картинок, стили`);
+console.log(`  tilda/2-html.html       ${size("tilda/2-html.html")}\tконтейнер блока`);
+console.log(`  tilda/3-js.html         ${size("tilda/3-js.html")}\tприложение (рисует разметку)`);
+console.log("\nальтернативы одним блоком:");
+console.log(`  tilda/all-in-one.html   ${size("tilda/all-in-one.html")}\tвсё сразу`);
+console.log(`  tilda/external.html     ${size("tilda/external.html")}\tCSS и JS с jsDelivr`);
+console.log(`\nassets/tilda/${cssFile}\t${size(`assets/tilda/${cssFile}`)}`);
+console.log(`assets/tilda/${jsFile}\t${size(`assets/tilda/${jsFile}`)}`);
+console.log("index.html — превью");

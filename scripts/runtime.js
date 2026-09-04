@@ -1,7 +1,7 @@
-/* Runtime для блока на Тильде. Вставляется скриптом сборки внутрь IIFE после mount().
+/* Runtime блока на Тильде. Скрипт сборки кладёт его в IIFE и вызывает после mount().
    Доступны: __syaBase (базовый URL ассетов), __syaPlayer (общее состояние плеера),
    __syaMusic ("" — генеративный эмбиент через Web Audio, иначе URL mp3), __SYA_WRAP_ID__ */
-(function () {
+function __syaRuntime() {
   var root = document.getElementById(__SYA_WRAP_ID__);
   if (!root) return;
 
@@ -197,4 +197,4 @@
 
   /* без автозапуска: музыка стартует только по клику на play */
   setUI(false);
-})();
+}
