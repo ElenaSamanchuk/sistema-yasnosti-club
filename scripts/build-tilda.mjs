@@ -484,3 +484,19 @@ console.log(`  tilda/external.html     ${size("tilda/external.html")}\tCSS и JS
 console.log(`\nassets/tilda/${cssFile}\t${size(`assets/tilda/${cssFile}`)}`);
 console.log(`assets/tilda/${jsFile}\t${size(`assets/tilda/${jsFile}`)}`);
 console.log("index.html — превью");
+
+// Картинки и внешние css/js блок тянет с jsDelivr, то есть из origin/main.
+// Пока свежий файл не запушен, на странице вместо картинки будет alt — предупреждаем.
+try {
+  const inRemote = new Set(
+    execFileSync("git", ["ls-tree", "-r", "--name-only", "origin/main"], { cwd: ROOT, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }).split("\n")
+  );
+  const missing = [...produced]
+    .map((f) => (f.endsWith(".webp") ? `assets/img/${f}` : `assets/tilda/${f}`))
+    .filter((p) => !inRemote.has(p));
+  if (missing.length) {
+    console.log("\n⚠ этих файлов ещё нет в origin/main, а блок берёт их с jsDelivr.");
+    console.log("  Запушьте до вставки в Тильду, иначе вместо картинки будет alt:");
+    missing.forEach((p) => console.log("    " + p));
+  }
+} catch {}
