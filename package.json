@@ -5,7 +5,7 @@
   "description": "Система ясности — Аудиоклуб: сборка блоков для Тильды",
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-tilda.mjs --music=assets/audio/satie-gymnopedie-1.mp3",
+    "build": "node scripts/build-tilda.mjs --music=assets/audio/satie-gymnopedie-1.mp3 --bot='https://t.me/tribute/app?startapp=s15wd'",
     "serve": "npx serve -l 5567 ."
   },
   "devDependencies": {

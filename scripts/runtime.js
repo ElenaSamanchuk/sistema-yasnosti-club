@@ -54,6 +54,83 @@ function __syaRuntime() {
     items.forEach(function (el) { io.observe(el); });
   }
 
+  /* ---------- плавный скролл по якорям ---------- */
+  var ANCHOR_GAP = 16; /* воздух между меню Тильды и началом секции */
+
+  /* высота липкого меню Тильды: что реально висит у верхней кромки окна */
+  function fixedOffset() {
+    var o = 0;
+    if (!document.elementsFromPoint) return o;
+    var els = document.elementsFromPoint(Math.round(window.innerWidth / 2), 2) || [];
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      if (el === root || root.contains(el)) continue;
+      var cs = window.getComputedStyle(el);
+      if (cs.position !== "fixed" && cs.position !== "sticky") continue;
+      var r = el.getBoundingClientRect();
+      if (r.top <= 2 && r.bottom > o && r.bottom < window.innerHeight / 2) o = r.bottom;
+    }
+    return o;
+  }
+  function anchorTarget(hash) {
+    if (!hash || hash.length < 2 || hash.charAt(0) !== "#") return null;
+    try { return root.querySelector(hash); } catch (e) { return null; }
+  }
+  function anchorY(el) {
+    var y = window.pageYOffset + el.getBoundingClientRect().top - fixedOffset() - ANCHOR_GAP;
+    return y < 0 ? 0 : y;
+  }
+  /* своя анимация вместо scrollTo({behavior:"smooth"}): работает и в старых iOS,
+     и там, где поведение отключено; цель пересчитывается каждый кадр — картинки
+     догружаются по ходу прокрутки и высота выше цели может измениться */
+  var anchorRaf = 0;
+  function stopAnchorScroll() {
+    if (anchorRaf) cancelAnimationFrame(anchorRaf);
+    anchorRaf = 0;
+    window.removeEventListener("wheel", stopAnchorScroll);
+    window.removeEventListener("touchstart", stopAnchorScroll);
+    window.removeEventListener("keydown", stopAnchorScroll);
+  }
+  function scrollToAnchor(el, smooth) {
+    var to = anchorY(el);
+    if (!smooth || reduce || !window.requestAnimationFrame) return window.scrollTo(0, to);
+    var from = window.pageYOffset;
+    if (Math.abs(to - from) < 2) return;
+    var dur = Math.min(900, Math.max(320, Math.abs(to - from) * 0.45));
+    var t0 = 0;
+    stopAnchorScroll();
+    window.addEventListener("wheel", stopAnchorScroll, { passive: true });
+    window.addEventListener("touchstart", stopAnchorScroll, { passive: true });
+    window.addEventListener("keydown", stopAnchorScroll);
+    var step = function (t) {
+      if (!t0) t0 = t;
+      var p = Math.min(1, (t - t0) / dur);
+      var e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; /* easeInOutCubic */
+      window.scrollTo(0, from + (anchorY(el) - from) * e);
+      if (p < 1) anchorRaf = requestAnimationFrame(step);
+      else stopAnchorScroll();
+    };
+    anchorRaf = requestAnimationFrame(step);
+  }
+  /* ловим клики по всей странице: ссылка может быть и в меню Тильды */
+  document.addEventListener("click", function (ev) {
+    if (ev.defaultPrevented || ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+    var a = ev.target && ev.target.closest ? ev.target.closest("a[href]") : null;
+    if (!a || (a.target && a.target !== "_self")) return;
+    var href = a.getAttribute("href") || "";
+    var hash = href.charAt(0) === "#" ? href : (a.host === location.host && a.pathname === location.pathname ? a.hash : "");
+    var el = anchorTarget(hash);
+    if (!el) return;
+    ev.preventDefault();
+    scrollToAnchor(el, true);
+    if (history.replaceState) history.replaceState(null, "", hash);
+  });
+  /* прямая ссылка вида /audio-club#price: браузер прыгает под меню — доводим */
+  if (location.hash) {
+    var deep = anchorTarget(location.hash);
+    if (deep) setTimeout(function () { scrollToAnchor(deep, false); }, 60);
+  }
+
   /* ---------- плеер: тихая музыка, play/pause ---------- */
   var btn = root.querySelector(".sya-play");
   if (!btn) return;

@@ -24,6 +24,8 @@
  *   • JS: без type=module, в IIFE (никаких глобальных const рядом с jQuery Тильды)
  *   • плеер: иконка паузы вместо play, точка прогресса движется вместе с волной
  *   • плавное появление блоков (IntersectionObserver), точки в конце абзацев снимаются
+ *   • одинаковые отступы сверху и снизу у всех секций (был разнобой section / section-sm)
+ *   • плавный скролл по якорям с поправкой на липкое меню Тильды
  *   • на выходе всё минифицировано esbuild: без комментариев и пустых строк
  */
 import fs from "node:fs";
@@ -59,7 +61,7 @@ const FONTS =
 
 // Роли картинок по порядку их появления в JS. maxWidth — с запасом ×2 под ретину.
 const IMAGE_ROLES = [
-  { role: "hero-player", maxWidth: 0, expect: "1000x746", preload: true }, // фото в карточке плеера — без уменьшения
+  { role: "hero-player", maxWidth: 1000, expect: "1000x746", preload: true }, // фото в карточке плеера, отдаётся в ~420px × 2
   { role: "vinyl-mark", maxWidth: 0, expect: "440x440", preload: true }, // печать на пластинке (png с альфой)
   { role: "recognition-band", maxWidth: 1800, expect: "1800x379" }, // широкая полоса «Теперь будет иначе»
   { role: "author-1", maxWidth: 600, expect: "1200x800" }, // фото автора, колонка 236px
@@ -68,6 +70,23 @@ const IMAGE_ROLES = [
   { role: "faq-photo-1", maxWidth: 480, expect: "1000x666" }, // полароиды в FAQ, 168–184px
   { role: "faq-photo-2", maxWidth: 480, expect: "1000x481" },
 ];
+
+// Своя картинка вместо присланной: положите файл source/img/<роль>.<jpg|png|webp>,
+// имя без расширения = поле role выше. Переживает новые сборки от разработчика.
+const IMG_DIR = "source/img";
+// формат по содержимому, а не по расширению: png с именем .jpg не должен ломать сборку
+function sniff(b) {
+  if (b.length > 8 && b.readUInt32BE(0) === 0x89504e47) return "image/png";
+  if (b.length > 3 && b[0] === 0xff && b[1] === 0xd8) return "image/jpeg";
+  if (b.length > 12 && b.toString("latin1", 0, 4) === "RIFF" && b.toString("latin1", 8, 12) === "WEBP") return "image/webp";
+  return null;
+}
+function overrideFor(role) {
+  const dir = path.join(ROOT, IMG_DIR);
+  if (!fs.existsSync(dir)) return null;
+  const hit = fs.readdirSync(dir).find((f) => f.replace(/\.[^.]+$/, "") === role && /\.(jpe?g|png|webp)$/i.test(f));
+  return hit ? path.join(dir, hit) : null;
+}
 
 // Что плавно появляется (внутри .sya). Порядок = очередность внутри родителя для задержки.
 const REVEAL_SELECTORS = [
@@ -146,12 +165,28 @@ const produced = new Set();
 const preloads = [];
 const imgTable = [];
 blobs.forEach((m, i) => {
-  const type = m[1];
-  const buf = Buffer.from(m[2], "base64");
-  const ext = type === "image/png" ? "png" : type === "image/jpeg" ? "jpg" : type.split("/")[1];
+  let type = m[1];
+  let buf = Buffer.from(m[2], "base64");
   const rule = IMAGE_ROLES[i] || { role: `img-${i + 1}`, maxWidth: 0 };
+  const ovr = overrideFor(rule.role);
+  if (ovr) {
+    buf = fs.readFileSync(ovr);
+    type = sniff(buf) || fail(`${path.relative(ROOT, ovr)}: не jpg, не png и не webp`);
+    if (type === "image/webp") {
+      // cwebp не читает webp на входе — переводим в png штатным sips
+      const conv = path.join(TMP, `ovr-${i}.png`);
+      try {
+        execFileSync("sips", ["-s", "format", "png", ovr, "--out", conv], { stdio: "pipe" });
+      } catch {
+        fail(`${path.relative(ROOT, ovr)}: не удалось прочитать webp — положите jpg или png`);
+      }
+      buf = fs.readFileSync(conv);
+      type = "image/png";
+    }
+  }
+  const ext = type === "image/png" ? "png" : type === "image/jpeg" ? "jpg" : type.split("/")[1];
   const { w, h } = dims(buf, type);
-  if (rule.expect && rule.expect !== `${w}x${h}`) {
+  if (!ovr && rule.expect && rule.expect !== `${w}x${h}`) {
     console.warn(`⚠ #${i + 1} ${rule.role}: размер ${w}x${h}, ожидался ${rule.expect} — картинки могли поменяться местами`);
   }
   const tmpSrc = path.join(TMP, `${i}.${ext}`);
@@ -178,7 +213,7 @@ blobs.forEach((m, i) => {
   if (rule.preload) preloads.push(rel);
   js = js.split(m[0]).join(`__syaBase+"${rel}"`);
   const outDims = dims(out, "image/webp");
-  imgTable.push({ "#": i + 1, роль: rule.role, было: `${w}x${h} ${ext} ${kb(buf.length)}`, стало: `${rule.maxWidth && w > rule.maxWidth ? rule.maxWidth + "w" : "как есть"} ${kb(out.length)}`, файл: file });
+  imgTable.push({ "#": i + 1, роль: rule.role, было: `${ovr ? IMG_DIR + "/" + path.basename(ovr) + " " : ""}${w}x${h} ${ext} ${kb(buf.length)}`, стало: `${rule.maxWidth && w > rule.maxWidth ? rule.maxWidth + "w" : "как есть"} ${kb(out.length)}`, файл: file });
 });
 console.table(imgTable);
 
@@ -241,6 +276,9 @@ if (imgCount < 5) fail("img в шаблонах меньше ожидаемог�
 if (BOT_URL) js = js.split(JSON.stringify(PLACEHOLDER_BOT)).join(JSON.stringify(BOT_URL));
 else if (js.includes(PLACEHOLDER_BOT)) console.warn(`⚠ в сборке остался плейсхолдер ${PLACEHOLDER_BOT} — задайте --bot=https://t.me/...`);
 
+// 5b. плашка в hero: вместо даты старта продаж — постоянный доступ
+js = patch(js, /tag:"Старт продаж[^"]*"/, 'tag:"Доступ по подписке"', "плашка в hero");
+
 // 6. плеер: прогресс идёт от реального воспроизведения (общее состояние __syaPlayer)
 js = patch(
   js,
@@ -263,6 +301,24 @@ js = js.split(btnOld).join(
 // 7. «Теперь будет иначе», пункт 03: текст уже, чтобы «теория» переносилась
 const narrowVar = must(js.match(/k\("p",(\w+),o\(y\(\w+\)\.items\[2\]\.text\)/), "RecognitionBand items[2].text")[1];
 js = patch(js, new RegExp(`\\b${narrowVar}=\\{class:"`), `${narrowVar}={class:"sya-narrow `, "класс описания пункта 03");
+
+// 7b. вертикальный ритм: у всех секций одинаковые отступы сверху и снизу
+// hero был без верхнего отступа (над ним стояла своя шапка) — на Тильде меню чужое
+js = patch(js, /class:"paper pb-\[var\(--spacing-section\)\] pt-5 md:pt-20"/, 'class:"paper section"', "паддинги hero");
+// «Теперь будет иначе»: кнопка на мобильном отрывалась от текста (32px снизу у пункта + 40px mt-10)
+js = patch(
+  js,
+  /class:"btn order-last mt-10 w-full md:order-none md:mt-0 md:w-fit"/,
+  'class:"btn order-last mt-3 w-full md:order-none md:mt-0 md:w-fit"',
+  "отступ кнопки «Узнать подробнее»"
+);
+// «Автор аудиоклуба»: на мобильном между цитатой и фото было 56px
+js = patch(
+  js,
+  /class:"grid items-center gap-14 md:grid-cols-\[236px_1fr\] md:gap-16"/,
+  'class:"grid items-center gap-8 md:grid-cols-[236px_1fr] md:gap-16"',
+  "отступ между текстом и фото автора"
+);
 
 // 8. runtime: плавное появление, точки в конце абзацев, плеер с музыкой
 const runtime = fs
@@ -345,6 +401,10 @@ css = css.split("#app").join(`#${APP_ID}`);
 }
 const embedCss =
   `#${WRAP_ID}{width:100%;max-width:100%;margin:0;padding:0}` +
+  // одинаковый вертикальный ритм: в исходнике часть секций была section (60/100), часть section-sm (40/60)
+  `${P}{--spacing-section:clamp(48px,7vw,80px);--spacing-section-sm:clamp(48px,7vw,80px)}` +
+  // если браузер сам прыгает по #якорю до старта скрипта — заголовок не уедет под меню Тильды
+  `${P} section[id]{scroll-margin-top:76px}` +
   `${P}{display:block;position:relative;isolation:isolate;overflow-x:clip;width:100%;max-width:100%;min-width:0}` +
   `${P} .min-h-screen{min-height:0}` +
   `${P} [data-sya-reveal]{opacity:0;transform:translate3d(0,22px,0);transition:opacity .8s cubic-bezier(.22,.61,.36,1),transform .8s cubic-bezier(.22,.61,.36,1);transition-delay:var(--sya-d,0s);will-change:opacity,transform}` +
