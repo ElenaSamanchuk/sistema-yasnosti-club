@@ -279,6 +279,14 @@ else if (js.includes(PLACEHOLDER_BOT)) console.warn(`⚠ в сборке ост�
 // 5b. плашка в hero: вместо даты старта продаж — постоянный доступ
 js = patch(js, /tag:"Старт продаж[^"]*"/, 'tag:"Доступ по подписке"', "плашка в hero");
 
+// 5c. вторая кнопка в hero: тест в боте, под кнопкой подписки
+js = patch(
+  js,
+  /k\("a",\{href:y\((\w+)\)\.cta\.href,target:"_blank",rel:"noopener",class:"btn btn-gradient w-full"\},o\(y\(\1\)\.cta\.label\),9,\w+\)/,
+  'k("div",{class:"flex w-full flex-col gap-3"},[$&,k("a",{href:"tg://resolve?domain=sistemayasnosti_bot",class:"btn btn-outline w-full"},"\u041f\u0440\u043e\u0439\u0434\u0438 \u0442\u0435\u0441\u0442 \u0438\u00a0\u0443\u0437\u043d\u0430\u0439 \u043a\u0442\u043e \u0442\u044b")])',
+  "вторая кнопка в hero"
+);
+
 // 6. плеер: прогресс идёт от реального воспроизведения (общее состояние __syaPlayer)
 js = patch(
   js,
@@ -413,6 +421,9 @@ const embedCss =
   `${P} .sya-dot{transition:left .12s linear}` +
   `${P} .sya-play{cursor:pointer;-webkit-appearance:none;appearance:none;border:0}` +
   `${P} .sya-ico-pause{display:none}${P}[data-sya-playing] .sya-ico-pause{display:block}${P}[data-sya-playing] .sya-ico-play{display:none}` +
+  // вторичная кнопка: контур вместо заливки, чтобы не спорить с основной
+  `${P} .btn-outline{background:none;color:var(--color-brown);box-shadow:inset 0 0 0 1px #938d8466;transition:color .2s,box-shadow .2s}` +
+  `${P} .btn-outline:hover{color:var(--color-olive);box-shadow:inset 0 0 0 1px var(--color-olive)}` +
   `@media (min-width:64rem){${P} .sya-narrow{max-width:236px}}`; /* только в 4-колоночной сетке */
 css = minifyCss(`${css}\n${embedCss}`);
 if (css.includes("</style")) fail("CSS содержит </style: инлайн-стиль так не вставить");
