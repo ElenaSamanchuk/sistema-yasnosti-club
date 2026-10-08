@@ -480,6 +480,8 @@ const embedCss =
   `${P} .btn-outline{background:none;color:var(--color-brown);box-shadow:inset 0 0 0 1px #938d8466;transition:color .2s,box-shadow .2s}` +
   `${P} .btn-outline:hover{color:var(--color-olive);box-shadow:inset 0 0 0 1px var(--color-olive)}` +
   `${P} .sya-theme-intro{display:block;max-width:34rem;margin-inline:auto;margin-top:.75rem;margin-bottom:1.25rem;padding:0;font-weight:400;font-style:italic;text-align:center;line-height:1.55;color:var(--color-text-2);text-wrap:pretty}` +
+  // подводка темы только с планшета: на телефоне не растим первый экран (решение Елены 08.10)
+  `@media (max-width:767px){${P} .sya-theme-intro{display:none}}` +
   `${P} .sya-ep-type{max-width:36rem;overflow-wrap:anywhere}` +
   // «Послушать в боте»: мягкая плашка, тап-зона 44 px за счёт ::after, не спорит с основной кнопкой
   `${P} .sya-bot-cta{position:relative;display:inline-flex;align-items:center;gap:.45rem;margin-top:.6rem;padding:.4rem .85rem .4rem .45rem;border-radius:9999px;font-size:.8125rem;font-weight:500;line-height:1.2;letter-spacing:-.01em;color:var(--color-brown);background:color-mix(in srgb,var(--color-olive) 14%,transparent);text-decoration:none;transition:background-color .2s,color .2s}` +
