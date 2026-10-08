@@ -310,7 +310,7 @@ if (OCTOBER_PATCHES) {
   js = patch(
     js,
     /(X\((\w+),\{class:"relative z-10",photo:y\(\w+\),title:y\(\w+\)\.title,subtitle:y\(\w+\)\.subtitle,"meta-left":y\(\w+\)\.metaLeft,"meta-right":y\(\w+\)\.metaRight\},null,8,\["photo","title","subtitle","meta-left","meta-right"\]\))/,
-    '$1,k("p",{class:"sya-theme-intro relative z-10 text-center text-body-sm italic leading-[1.55] tracking-brand text-text-2"},o(y(e).themeIntro),1)',
+    '$1,k("p",{class:"sya-theme-intro relative z-10 text-center text-body-sm italic leading-[1.55] tracking-brand text-text-2"},[k("span",{class:"block"},o(y(e).themeIntro),1),k("span",{class:"block"},o(y(e).themeIntro2),1)])',
     "hero: themeIntro под плеером"
   );
 
@@ -514,7 +514,7 @@ const embedCss =
   // вторичная кнопка: контур вместо заливки, чтобы не спорить с основной
   `${P} .btn-outline{background:none;color:var(--color-brown);box-shadow:inset 0 0 0 1px #938d8466;transition:color .2s,box-shadow .2s}` +
   `${P} .btn-outline:hover{color:var(--color-olive);box-shadow:inset 0 0 0 1px var(--color-olive)}` +
-  `${P} .sya-theme-intro{display:block;max-width:24rem;margin-inline:auto;margin-top:1.5rem;margin-bottom:0;padding:0;font-weight:400;font-style:italic;text-align:center;line-height:1.55;color:var(--color-text-2);text-wrap:pretty}` +
+  `${P} .sya-theme-intro{display:block;text-wrap:balance;max-width:24rem;margin-inline:auto;margin-top:1.5rem;margin-bottom:0;padding:0;font-weight:400;font-style:italic;text-align:center;line-height:1.55;color:var(--color-text-2);text-wrap:pretty}` +
   `@media (max-width:767px){${P} .sya-theme-intro{margin-top:1.25rem;padding-inline:.5rem}}` +
   `${P} .sya-ep-type{max-width:36rem;overflow-wrap:anywhere}` +
   // «Послушать в боте»: мягкая плашка, тап-зона 44 px за счёт ::after, не спорит с основной кнопкой
@@ -551,6 +551,7 @@ const embedCss =
   `@media (max-width:767px){${P} .sya-price-existing{font-size:.8125rem;padding:.35rem .85rem;margin-bottom:1rem}}` +
   `@media (max-width:767px){${P} .sya-course-note{max-width:100%;font-size:.875rem;gap:.5rem;padding:.5rem 1rem .5rem .5rem}${P} .sya-course-note::before{width:1.3rem;height:1.3rem}}` +
   `@media (max-width:359px){${P} .sya-price-existing{font-size:.75rem;padding:.3rem .75rem}${P} .sya-course-note{font-size:.8125rem;gap:.45rem;padding:.45rem .8rem .45rem .45rem}${P} .sya-course-note::before{width:1.25rem;height:1.25rem}}` +
+  `${P} .sya-theme-intro>span{text-wrap:balance}` +
   `@media (min-width:64rem){${P} .sya-narrow{max-width:236px}}`; /* только в 4-колоночной сетке */
 css = minifyCss(`${css}\n${embedCss}`);
 if (css.includes("</style")) fail("CSS содержит </style: инлайн-стиль так не вставить");
