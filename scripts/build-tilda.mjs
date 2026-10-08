@@ -328,10 +328,6 @@ if (OCTOBER_PATCHES) {
     );
   }
 
-  // 5g0. список «что входит» в #price — 3 пункта (условия переехали под цену по ТЗ)
-  js = patch(js, /"mx-auto mt-10 grid max-w-\[620px\] grid-cols-1 gap-x-10 gap-y-5 text-left sm:grid-cols-2"/,
-    '"sya-price-list mx-auto mt-8 grid max-w-[860px] grid-cols-1 gap-x-10 gap-y-3 text-left md:mt-10 md:gap-y-5 md:grid-cols-3"', "SubscribeSection: список в 3 колонки");
-
   // 5g. блок #price: сноска «действующим 29 €» + плашка «засчитываем в курс» (ТЗ: сноска ИЛИ плашки — оставили сноску, без повтора цены)
   js = patch(
     js,
@@ -486,7 +482,7 @@ const embedCss =
   // вторичная кнопка: контур вместо заливки, чтобы не спорить с основной
   `${P} .btn-outline{background:none;color:var(--color-brown);box-shadow:inset 0 0 0 1px #938d8466;transition:color .2s,box-shadow .2s}` +
   `${P} .btn-outline:hover{color:var(--color-olive);box-shadow:inset 0 0 0 1px var(--color-olive)}` +
-  `${P} .sya-theme-intro{display:block;max-width:34rem;margin-inline:auto;margin-top:.75rem;margin-bottom:1.25rem;padding:0;font-weight:400;font-style:italic;text-align:center;line-height:1.55;color:var(--color-text-2);text-wrap:pretty}` +
+  `${P} .sya-theme-intro{display:block;max-width:27rem;margin-inline:auto;margin-top:.75rem;margin-bottom:1.25rem;padding:0;font-weight:400;font-style:italic;text-align:center;line-height:1.55;color:var(--color-text-2);text-wrap:pretty}` +
   // подводка темы только с планшета: на телефоне не растим первый экран (решение Елены 08.10)
   `@media (max-width:767px){${P} .sya-theme-intro{display:none}}` +
   `${P} .sya-ep-type{max-width:36rem;overflow-wrap:anywhere}` +
@@ -516,6 +512,10 @@ const embedCss =
   `@media (max-width:767px){${P} .gap-7.px-8.py-10{gap:1.25rem;padding:1.75rem 1.25rem}${P} .pb-8.pt-8{padding-top:1.25rem;padding-bottom:1.25rem}${P} #format .mt-12{margin-top:2rem}${P} #format .gap-10{gap:1.5rem}${P} #format .title-gap{margin-top:1.5rem}${P} .leading-\\[1\\.55\\]{line-height:1.42}${P} .leading-\\[1\\.6\\]{line-height:1.45}${P} .pb-8.pt-8.gap-1{gap:.45rem}}` +
   // мини-плашка «в курс» на телефоне — уже кнопки, последним правилом (перебивает базовое)
   `@media (max-width:767px){${P} .sya-course-note{max-width:15rem;gap:.4rem;margin-top:.9rem;padding:.35rem .7rem .35rem .4rem;font-size:.6875rem;line-height:1.35;border-radius:9px}${P} .sya-course-note::before{width:1rem;height:1rem;background-size:.55rem}}` +
+  `@media (max-width:767px){${P} #price ul.grid{margin-top:2rem;row-gap:.75rem}}` +
+  // галочки списков по центру первой строки (замер: были ниже на 2 и 4 px)
+  `${P} section:first-of-type ul>li>svg{margin-top:1px}${P} #price ul.grid>li>svg{margin-top:0}` +
+  `@media (max-width:767px){${P} section:first-of-type ul>li>svg{margin-top:.5px}${P} #price ul.grid>li>svg{margin-top:-.5px}}` +
   `@media (min-width:64rem){${P} .sya-narrow{max-width:236px}}`; /* только в 4-колоночной сетке */
 css = minifyCss(`${css}\n${embedCss}`);
 if (css.includes("</style")) fail("CSS содержит </style: инлайн-стиль так не вставить");
