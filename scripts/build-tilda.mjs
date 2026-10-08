@@ -302,8 +302,16 @@ if (OCTOBER_PATCHES) {
   js = patch(
     js,
     /k\("span",OP,o\(y\(e\)\.themeTail\),1\)\]\)\]\),k\("ul",HP,/,
-    'k("span",OP,o(y(e).themeTail),1)])]),k("p",{class:"sya-theme-intro mx-auto text-center text-body-sm italic leading-[1.55] tracking-brand text-text-2"},o(y(e).themeIntro),1),k("ul",HP,',
-    "hero: themeIntro"
+    'k("span",OP,o(y(e).themeTail),1)])]),k("ul",HP,',
+    "hero: themeIntro (место под плеером)"
+  );
+
+  // 5e2. подводка темы — под плеером справа (Елена 08.10: колонки не так разнятся по высоте)
+  js = patch(
+    js,
+    /(X\((\w+),\{class:"relative z-10",photo:y\(\w+\),title:y\(\w+\)\.title,subtitle:y\(\w+\)\.subtitle,"meta-left":y\(\w+\)\.metaLeft,"meta-right":y\(\w+\)\.metaRight\},null,8,\["photo","title","subtitle","meta-left","meta-right"\]\))/,
+    '$1,k("p",{class:"sya-theme-intro relative z-10 text-center text-body-sm italic leading-[1.55] tracking-brand text-text-2"},o(y(e).themeIntro),1)',
+    "hero: themeIntro под плеером"
   );
 
   // 5f. выпуски: подпись-пояснение и «Послушать в боте» на 01–02
@@ -482,7 +490,7 @@ const embedCss =
   // вторичная кнопка: контур вместо заливки, чтобы не спорить с основной
   `${P} .btn-outline{background:none;color:var(--color-brown);box-shadow:inset 0 0 0 1px #938d8466;transition:color .2s,box-shadow .2s}` +
   `${P} .btn-outline:hover{color:var(--color-olive);box-shadow:inset 0 0 0 1px var(--color-olive)}` +
-  `${P} .sya-theme-intro{display:block;max-width:27rem;margin-inline:auto;margin-top:.75rem;margin-bottom:1.25rem;padding:0;font-weight:400;font-style:italic;text-align:center;line-height:1.55;color:var(--color-text-2);text-wrap:pretty}` +
+  `${P} .sya-theme-intro{display:block;max-width:24rem;margin-inline:auto;margin-top:1.5rem;margin-bottom:0;padding:0;font-weight:400;font-style:italic;text-align:center;line-height:1.55;color:var(--color-text-2);text-wrap:pretty}` +
   // подводка темы только с планшета: на телефоне не растим первый экран (решение Елены 08.10)
   `@media (max-width:767px){${P} .sya-theme-intro{display:none}}` +
   `${P} .sya-ep-type{max-width:36rem;overflow-wrap:anywhere}` +
