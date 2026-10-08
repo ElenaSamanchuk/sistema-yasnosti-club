@@ -321,11 +321,11 @@ if (OCTOBER_PATCHES) {
       'k("span",{class:"sya-ep-type mt-1 block text-caption leading-[1.45] tracking-brand text-text-2"},o(H.type),1),H.botHref?k("a",{href:H.botHref,target:"_blank",rel:"noopener",class:"sya-bot-cta"},o(H.botLabel||"Послушать в боте"),1):NA()';
     if (!js.includes(epType)) fail("TopicsSection: подпись выпуска");
     js = js.replace(epType, epTypeNew);
-    // botNote — в белой карточке, над строкой flipHint (не внутри flex-row Lu и не у пластинки)
+    // botNote теперь под заголовком секции (5f2); здесь только flipHint
     js = patch(
       js,
       /k\("div",(\w+),\[k\("p",(\w+),o\(y\(e\)\.flipHint\),1\)/,
-      'y(e).botNote?k("p",{class:"sya-topics-botnote mt-4 px-1 text-body-sm leading-[1.5] tracking-brand text-text-2 text-center"},o(y(e).botNote),1):NA(),k("div",$1,[k("p",$2,o(y(e).flipHint),1)',
+      'k("div",$1,[k("p",$2,o(y(e).flipHint),1)',
       "TopicsSection: botNote"
     );
     js = patch(
@@ -335,6 +335,14 @@ if (OCTOBER_PATCHES) {
       "TopicsSection: строка выпуска"
     );
   }
+
+  // 5f2. «Первые два выпуска уже ждут тебя в боте» — подзаголовком под «12 выпусков октября» (Елена 08.10)
+  js = patch(
+    js,
+    /(k\("h2",\{ref_key:"heading",ref:\w+,class:"h2-section scroll-mt-20 text-brown"\},o\(y\(e\)\.title\),513\))/,
+    '$1,y(e).botNote?k("p",{class:"sya-topics-botnote"},o(y(e).botNote),1):NA()',
+    "TopicsSection: botNote под заголовком"
+  );
 
   // 5g. блок #price: сноска «действующим 29 €» + плашка «засчитываем в курс» (ТЗ: сноска ИЛИ плашки — оставили сноску, без повтора цены)
   js = patch(
@@ -500,8 +508,7 @@ const embedCss =
   `${P} .sya-bot-cta::after{content:"";position:absolute;inset:-6px -4px}` +
   `@media (max-width:767px){${P} .sya-bot-cta{gap:.35rem;margin-top:.5rem;padding:.28rem .7rem .28rem .32rem;font-size:.75rem}${P} .sya-bot-cta::before{width:1.05rem;height:1.05rem;background-size:.42rem}${P} .sya-bot-cta::after{inset:-9px -4px}}` +
   `@media (hover:hover){${P} .sya-bot-cta:hover{background:color-mix(in srgb,var(--color-olive) 24%,transparent)}}` +
-  `${P} .sya-topics-botnote{margin-inline:auto;max-width:100%;text-align:center;overflow-wrap:anywhere}` +
-  `@media (min-width:640px){${P} .sya-topics-botnote{text-align:left;margin-top:1.5rem}}` +
+  `${P} .sya-topics-botnote{max-width:30rem;margin:.9rem auto 0;text-align:center;font-size:var(--text-body);line-height:1.45;letter-spacing:var(--tracking-brand);color:var(--color-text-2);text-wrap:balance}` +
   // плашка «засчитываем в курс» — выделена по ТЗ, но тише основной кнопки
   `${P} .sya-price-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;margin:2.25rem auto 0;padding:0;list-style:none}` +
   `${P} .sya-price-badges+p{margin-top:.9rem}` +
