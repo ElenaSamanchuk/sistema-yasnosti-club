@@ -336,7 +336,7 @@ if (OCTOBER_PATCHES) {
   js = patch(
     js,
     /k\("p",mx,\[k\("span",Rx,o\(y\(e\)\.amount\),1\),k\("span",Nx,o\(y\(e\)\.period\),1\)\]\),k\("a",\{href:y\(e\)\.cta\.href/,
-    'k("p",mx,[k("span",Rx,o(y(e).amount),1),k("span",Nx,o(y(e).period),1)]),k("ul",{class:"sya-price-badges"},[k("li",{class:"sya-price-badge is-new"},[k("span",{class:"sya-price-badge-l"},o(y(e).badges[0].label),1),k("span",{class:"sya-price-badge-v"},o(y(e).badges[0].value),1)]),k("li",{class:"sya-price-badge"},[k("span",{class:"sya-price-badge-l"},o(y(e).badges[1].label),1),k("span",{class:"sya-price-badge-v"},o(y(e).badges[1].value),1)])]),k("div",{class:"sya-price-notes"},[k("p",null,o(y(e).existingNote),1),k("p",null,o(y(e).terms),1)]),y(e).coursePerk?k("p",{class:"sya-course-note"},o(y(e).coursePerk),1):NA(),k("a",{href:y(e).cta.href',
+    'k("p",mx,[k("span",Rx,o(y(e).amount),1),k("span",Nx,o(y(e).period),1)]),k("ul",{class:"sya-price-badges"},[k("li",{class:"sya-price-badge is-new"},[k("span",{class:"sya-price-badge-l"},o(y(e).badges[0].label),1),k("span",{class:"sya-price-badge-v"},o(y(e).badges[0].value),1)]),k("li",{class:"sya-price-badge"},[k("span",{class:"sya-price-badge-l"},o(y(e).badges[1].label),1),k("span",{class:"sya-price-badge-v"},o(y(e).badges[1].value),1)])]),k("p",{class:"sya-price-notes"},o(y(e).existingNote+". "+y(e).terms),1),y(e).coursePerk?k("p",{class:"sya-course-note"},o(y(e).coursePerk),1):NA(),k("a",{href:y(e).cta.href',
     "SubscribeSection: сноска для действующих и плашка про курс"
   );
 }
@@ -498,9 +498,10 @@ const embedCss =
   `@media (max-width:359px){${P} .sya-price-badges{gap:.5rem}${P} .sya-price-badge{padding:.5rem .8rem;font-size:.8125rem}}` +
   `${P} .sya-price-badge-v{font-weight:600}` +
   `${P} .sya-price-notes{max-width:30rem;margin:.9rem auto 0;font-size:.8125rem;line-height:1.5;color:color-mix(in srgb,var(--color-bg) 70%,transparent)}` +
-  `${P} .sya-price-notes p+p{margin-top:.15rem}` +
-  `${P} .sya-course-note{display:flex;align-items:center;gap:.75rem;max-width:32rem;margin:1.75rem auto 0;padding:.9rem 1.25rem .9rem 1rem;text-align:left;font-size:.875rem;line-height:1.45;font-weight:500;color:var(--color-bg);background:color-mix(in srgb,var(--color-olive) 22%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-olive) 60%,transparent);border-radius:14px}` +
+    `${P} .sya-course-note{display:flex;align-items:center;gap:.75rem;max-width:32rem;margin:1.75rem auto 0;padding:.9rem 1.25rem .9rem 1rem;text-align:left;font-size:.875rem;line-height:1.45;font-weight:500;color:var(--color-bg);background:color-mix(in srgb,var(--color-olive) 22%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-olive) 60%,transparent);border-radius:14px}` +
   `${P} .sya-course-note::before{content:"";flex:none;width:2rem;height:2rem;border-radius:50%;background:var(--color-olive) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17' fill='none'%3E%3Cpath d='M2.5 9l4 4 8-9' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/1rem no-repeat}` +
+  `@media (max-width:639px){${P} .sya-course-note{gap:.6rem;margin-top:1.35rem;padding:.7rem .9rem .7rem .75rem;font-size:.8125rem;line-height:1.4;border-radius:12px}${P} .sya-course-note::before{width:1.5rem;height:1.5rem;background-size:.8rem}${P} .sya-price-notes{font-size:.75rem}}` +
+  `@media (max-width:359px){${P} .sya-course-note{font-size:.75rem;padding:.65rem .75rem .65rem .65rem;gap:.5rem}}` +
   `@media (min-width:64rem){${P} .sya-narrow{max-width:236px}}`; /* только в 4-колоночной сетке */
 css = minifyCss(`${css}\n${embedCss}`);
 if (css.includes("</style")) fail("CSS содержит </style: инлайн-стиль так не вставить");
