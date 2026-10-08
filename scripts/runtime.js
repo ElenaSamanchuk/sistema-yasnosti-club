@@ -242,7 +242,7 @@ function __syaRuntime() {
 
   function fileEngine(url) {
     var a = document.createElement("audio");
-    a.src = url; a.loop = true; a.preload = "metadata"; a.volume = 0.35;
+    a.src = url; a.loop = true; a.preload = "none"; a.volume = 0.35;
     a.setAttribute("playsinline", "");
     return {
       play: function () { var p = a.play(); return p && p.then ? p : Promise.resolve(); },
