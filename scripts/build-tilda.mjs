@@ -504,6 +504,7 @@ const embedCss =
   `${P} .sya-price-badge{display:inline-flex;align-items:baseline;gap:.35rem;padding:.45rem .95rem;border-radius:9999px;font-size:.8125rem;line-height:1.2;color:var(--color-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-bg) 35%,transparent)}` +
   `${P} .sya-price-badge.is-new{background:var(--color-olive);box-shadow:none}` +
   `${P} .sya-price-badge-l{opacity:.8}` +
+  `@media (max-width:767px){${P} .sya-price-badges{gap:.4rem;margin-top:1.75rem}${P} .sya-price-badge{gap:.3rem;padding:.3rem .7rem;font-size:.75rem}}` +
   `@media (max-width:359px){${P} .sya-price-badges{gap:.5rem}${P} .sya-price-badge{padding:.5rem .8rem;font-size:.8125rem}}` +
   `${P} .sya-price-badge-v{font-weight:600}` +
   `${P} .sya-price-notes{max-width:28rem;margin:1rem auto 0;font-size:.75rem;line-height:1.5;color:color-mix(in srgb,var(--color-bg) 58%,transparent)}` +
