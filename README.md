@@ -63,7 +63,7 @@
 cd ~/Projects/sistema-yasnosti-club && npm run build
 ```
 
-`npm run build` = `node scripts/build-tilda.mjs --music=assets/audio/satie-gymnopedie-1.mp3 --bot='https://t.me/tribute/app?startapp=s15wd'`. Дополнительные опции: `--ref=<sha>` (закрепить CDN на коммите), `--clean` (удалить старые версии файлов).
+`npm run build` = `node scripts/build-tilda.mjs --music=assets/audio/satie-gymnopedie-1.mp3 --bot='https://t.me/tribute/app?startapp=s18xT'`. Дополнительные опции: `--ref=<sha>` (закрепить CDN на коммите), `--clean` (удалить старые версии файлов).
 
 3. Закоммитить и **запушить в `main`** — до вставки в Тильду, иначе новые картинки отдадут 404.
 4. Заново вставить `tilda/1-css.html` и `tilda/3-js.html` в свои блоки T123 и опубликовать страницу (`2-html.html` меняется редко — сверьтесь с `git status`).
@@ -101,5 +101,5 @@ http://localhost:5567 — превью `index.html`. Проверочные ст
 
 ## Известные плейсхолдеры в присланной странице
 
-- ссылки на кнопках покупки в hero и в блоке «Что входит»: в присланной сборке `https://t.me/your_bot_username`, сборка подставляет ссылку оплаты Tribute `https://t.me/tribute/app?startapp=s15wd`. Меняется флагом `--bot=` (в `package.json` она в одинарных кавычках — `?` в URL иначе съест шелл);
+- ссылки на кнопках покупки в hero и в блоке «Что входит»: в присланной сборке `https://t.me/your_bot_username`, сборка подставляет ссылку оплаты Tribute `https://t.me/tribute/app?startapp=s18xT`. Меняется флагом `--bot=` (в `package.json` она в одинарных кавычках — `?` в URL иначе съест шелл);
 - ссылки меню/футера «Отзывы», «О создателе», «Личный кабинет» вели на `#` — в блок не входят.
