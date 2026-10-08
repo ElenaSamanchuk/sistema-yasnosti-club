@@ -516,6 +516,8 @@ const embedCss =
   // галочки списков по центру первой строки (замер: были ниже на 2 и 4 px)
   `${P} section:first-of-type ul>li>svg{margin-top:1px}${P} #price ul.grid>li>svg{margin-top:0}` +
   `@media (max-width:767px){${P} section:first-of-type ul>li>svg{margin-top:.5px}${P} #price ul.grid>li>svg{margin-top:-.5px}}` +
+  // строка «Тема октября» на деске уже, перенос ровный
+  `@media (min-width:768px){${P} .divider-dot+p{max-width:25rem;margin-inline:auto;text-wrap:balance}}` +
   `@media (min-width:64rem){${P} .sya-narrow{max-width:236px}}`; /* только в 4-колоночной сетке */
 css = minifyCss(`${css}\n${embedCss}`);
 if (css.includes("</style")) fail("CSS содержит </style: инлайн-стиль так не вставить");
