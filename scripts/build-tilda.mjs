@@ -514,7 +514,7 @@ const embedCss =
   // вторичная кнопка: контур вместо заливки, чтобы не спорить с основной
   `${P} .btn-outline{background:none;color:var(--color-brown);box-shadow:inset 0 0 0 1px #938d8466;transition:color .2s,box-shadow .2s}` +
   `${P} .btn-outline:hover{color:var(--color-olive);box-shadow:inset 0 0 0 1px var(--color-olive)}` +
-  `${P} .sya-theme-intro{display:block;text-wrap:balance;max-width:24rem;margin-inline:auto;margin-top:1.5rem;margin-bottom:0;padding:0;font-weight:400;font-style:italic;text-align:center;line-height:1.55;color:var(--color-text-2);text-wrap:pretty}` +
+  `${P} .sya-theme-intro{display:block;text-wrap:balance;max-width:420px;margin-inline:auto;margin-top:1.5rem;margin-bottom:0;padding:0;font-weight:400;font-style:italic;text-align:center;line-height:1.55;color:var(--color-text-2);text-wrap:pretty}` +
   `@media (max-width:767px){${P} .sya-theme-intro{margin-top:1.25rem;padding-inline:.5rem}}` +
   `${P} .sya-ep-type{max-width:36rem;overflow-wrap:anywhere}` +
   // «Послушать в боте»: мягкая плашка, тап-зона 44 px за счёт ::after, не спорит с основной кнопкой
