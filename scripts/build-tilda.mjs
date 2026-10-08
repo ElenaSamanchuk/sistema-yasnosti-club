@@ -549,6 +549,7 @@ const embedCss =
   `@media (min-width:768px){${P} .divider-dot+p{max-width:25rem;margin-inline:auto;text-wrap:balance}}` +
   `${P} .sya-price-existing{display:table;margin:0 auto 1.25rem;padding:.4rem 1rem;border-radius:9999px;font-size:.875rem;line-height:1.3;letter-spacing:var(--tracking-brand);color:var(--color-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-bg) 35%,transparent)}` +
   `@media (max-width:767px){${P} .sya-price-existing{font-size:.8125rem;padding:.35rem .85rem;margin-bottom:1rem}}` +
+  `@media (max-width:767px){${P} .sya-course-note{max-width:100%;font-size:.875rem;gap:.5rem;padding:.5rem 1rem .5rem .5rem}${P} .sya-course-note::before{width:1.3rem;height:1.3rem}}` +
   `@media (max-width:359px){${P} .sya-price-existing{font-size:.75rem;padding:.3rem .75rem}${P} .sya-course-note{font-size:.8125rem;gap:.45rem;padding:.45rem .8rem .45rem .45rem}${P} .sya-course-note::before{width:1.25rem;height:1.25rem}}` +
   `@media (min-width:64rem){${P} .sya-narrow{max-width:236px}}`; /* только в 4-колоночной сетке */
 css = minifyCss(`${css}\n${embedCss}`);
