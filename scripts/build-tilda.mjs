@@ -330,7 +330,7 @@ if (OCTOBER_PATCHES) {
 
   // 5g0. список «что входит» в #price — 3 пункта (условия переехали под цену по ТЗ)
   js = patch(js, /"mx-auto mt-10 grid max-w-\[620px\] grid-cols-1 gap-x-10 gap-y-5 text-left sm:grid-cols-2"/,
-    '"sya-price-list mx-auto mt-10 grid max-w-[860px] grid-cols-1 gap-x-10 gap-y-5 text-left md:grid-cols-3"', "SubscribeSection: список в 3 колонки");
+    '"sya-price-list mx-auto mt-8 grid max-w-[860px] grid-cols-1 gap-x-10 gap-y-3 text-left md:mt-10 md:gap-y-5 md:grid-cols-3"', "SubscribeSection: список в 3 колонки");
 
   // 5g. блок #price: сноска «действующим 29 €» + плашка «засчитываем в курс» (ТЗ: сноска ИЛИ плашки — оставили сноску, без повтора цены)
   js = patch(
@@ -340,6 +340,13 @@ if (OCTOBER_PATCHES) {
     "SubscribeSection: сноска для действующих и плашка про курс"
   );
 }
+
+  // 5g2. порядок блока цены (Елена 08.10): плашки → цена → плашка «в курс» → кнопка → мелкая сноска
+  {
+    const re = /(k\("p",mx,\[k\("span",Rx,o\(y\(e\)\.amount\),1\),k\("span",Nx,o\(y\(e\)\.period\),1\)\]\)),(k\("ul",\{class:"sya-price-badges"\}.*?\]\)\]\)),(k\("p",\{class:"sya-price-notes"\},o\(y\(e\)\.existingNote\+"\. "\+y\(e\)\.terms\),1\)),(y\(e\)\.coursePerk\?k\("p",\{class:"sya-course-note"\},o\(y\(e\)\.coursePerk\),1\):NA\(\)),(k\("a",\{href:y\(e\)\.cta\.href,target:"_blank",rel:"noopener",class:"btn btn-gradient )mt-9("\},o\(y\(e\)\.cta\.label\),9,\w+\))/;
+    if (!re.test(js)) fail("SubscribeSection: порядок блока цены");
+    js = js.replace(re, "$2,$1,$4,$5mt-6$6,$3");
+  }
 
 // 6. плеер: прогресс идёт от реального воспроизведения (общее состояние __syaPlayer)
 js = patch(
@@ -491,19 +498,19 @@ const embedCss =
   `${P} .sya-topics-botnote{margin-inline:auto;max-width:100%;text-align:center;overflow-wrap:anywhere}` +
   `@media (min-width:640px){${P} .sya-topics-botnote{text-align:left;margin-top:1.5rem}}` +
   // плашка «засчитываем в курс» — выделена по ТЗ, но тише основной кнопки
-  `${P} .sya-price-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:.625rem;margin:1.1rem auto 0;padding:0;list-style:none}` +
-  `${P} .sya-price-badge{display:inline-flex;align-items:baseline;gap:.4rem;padding:.55rem 1.1rem;border-radius:9999px;font-size:.875rem;line-height:1.2;color:var(--color-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-bg) 35%,transparent)}` +
+  `${P} .sya-price-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;margin:2.25rem auto 0;padding:0;list-style:none}` +
+  `${P} .sya-price-badges+p{margin-top:.9rem}` +
+  `${P} .sya-price-badge{display:inline-flex;align-items:baseline;gap:.35rem;padding:.45rem .95rem;border-radius:9999px;font-size:.8125rem;line-height:1.2;color:var(--color-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-bg) 35%,transparent)}` +
   `${P} .sya-price-badge.is-new{background:var(--color-olive);box-shadow:none}` +
   `${P} .sya-price-badge-l{opacity:.8}` +
   `@media (max-width:359px){${P} .sya-price-badges{gap:.5rem}${P} .sya-price-badge{padding:.5rem .8rem;font-size:.8125rem}}` +
   `${P} .sya-price-badge-v{font-weight:600}` +
-  `${P} .sya-price-notes{max-width:30rem;margin:.9rem auto 0;font-size:.8125rem;line-height:1.5;color:color-mix(in srgb,var(--color-bg) 70%,transparent)}` +
-    `${P} .sya-course-note{display:flex;align-items:center;gap:.75rem;max-width:32rem;margin:1.75rem auto 0;padding:.9rem 1.25rem .9rem 1rem;text-align:left;font-size:.875rem;line-height:1.45;font-weight:500;color:var(--color-bg);background:color-mix(in srgb,var(--color-olive) 22%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-olive) 60%,transparent);border-radius:14px}` +
-  `${P} .sya-course-note::before{content:"";flex:none;width:2rem;height:2rem;border-radius:50%;background:var(--color-olive) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17' fill='none'%3E%3Cpath d='M2.5 9l4 4 8-9' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/1rem no-repeat}` +
-  `@media (max-width:639px){${P} .sya-course-note{gap:.6rem;margin-top:1.35rem;padding:.7rem .9rem .7rem .75rem;font-size:.8125rem;line-height:1.4;border-radius:12px}${P} .sya-course-note::before{width:1.5rem;height:1.5rem;background-size:.8rem}${P} .sya-price-notes{font-size:.75rem}}` +
-  `@media (max-width:359px){${P} .sya-course-note{font-size:.75rem;padding:.65rem .75rem .65rem .65rem;gap:.5rem}}` +
+  `${P} .sya-price-notes{max-width:28rem;margin:1rem auto 0;font-size:.75rem;line-height:1.5;color:color-mix(in srgb,var(--color-bg) 58%,transparent)}` +
+    `${P} .sya-course-note{display:flex;width:fit-content;align-items:center;gap:.55rem;max-width:26rem;margin:1.1rem auto 0;padding:.5rem .95rem .5rem .55rem;text-align:left;font-size:.8125rem;line-height:1.35;font-weight:500;color:var(--color-bg);background:color-mix(in srgb,var(--color-olive) 20%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-olive) 55%,transparent);border-radius:12px}` +
+  `${P} .sya-course-note::before{content:"";flex:none;width:1.4rem;height:1.4rem;border-radius:50%;background:var(--color-olive) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17' fill='none'%3E%3Cpath d='M2.5 9l4 4 8-9' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/.75rem no-repeat}` +
+  `@media (min-width:768px){${P} .sya-course-note{max-width:none;white-space:nowrap;padding:.4rem .85rem .4rem .45rem;font-size:.75rem;gap:.45rem;border-radius:9999px}${P} .sya-course-note::before{width:1.15rem;height:1.15rem;background-size:.65rem}}` +
   // телефон: ужать воздух в блоках разработчика (Елена 08.10: «отступы конские»)
-  `@media (max-width:767px){${P} .gap-7.px-8.py-10{gap:1.25rem;padding:1.75rem 1.25rem}${P} .pb-8.pt-8{padding-top:1.25rem;padding-bottom:1.25rem}${P} #format .mt-12{margin-top:2rem}${P} #format .gap-10{gap:1.5rem}${P} #format .title-gap{margin-top:1.5rem}}` +
+  `@media (max-width:767px){${P} .gap-7.px-8.py-10{gap:1.25rem;padding:1.75rem 1.25rem}${P} .pb-8.pt-8{padding-top:1.25rem;padding-bottom:1.25rem}${P} #format .mt-12{margin-top:2rem}${P} #format .gap-10{gap:1.5rem}${P} #format .title-gap{margin-top:1.5rem}${P} .leading-\\[1\\.55\\]{line-height:1.42}${P} .leading-\\[1\\.6\\]{line-height:1.45}${P} .pb-8.pt-8.gap-1{gap:.45rem}}` +
   `@media (min-width:64rem){${P} .sya-narrow{max-width:236px}}`; /* только в 4-колоночной сетке */
 css = minifyCss(`${css}\n${embedCss}`);
 if (css.includes("</style")) fail("CSS содержит </style: инлайн-стиль так не вставить");
