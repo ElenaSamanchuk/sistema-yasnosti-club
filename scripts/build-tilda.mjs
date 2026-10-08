@@ -502,6 +502,8 @@ const embedCss =
   `${P} .sya-course-note::before{content:"";flex:none;width:2rem;height:2rem;border-radius:50%;background:var(--color-olive) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17' fill='none'%3E%3Cpath d='M2.5 9l4 4 8-9' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/1rem no-repeat}` +
   `@media (max-width:639px){${P} .sya-course-note{gap:.6rem;margin-top:1.35rem;padding:.7rem .9rem .7rem .75rem;font-size:.8125rem;line-height:1.4;border-radius:12px}${P} .sya-course-note::before{width:1.5rem;height:1.5rem;background-size:.8rem}${P} .sya-price-notes{font-size:.75rem}}` +
   `@media (max-width:359px){${P} .sya-course-note{font-size:.75rem;padding:.65rem .75rem .65rem .65rem;gap:.5rem}}` +
+  // телефон: ужать воздух в блоках разработчика (Елена 08.10: «отступы конские»)
+  `@media (max-width:767px){${P} .gap-7.px-8.py-10{gap:1.25rem;padding:1.75rem 1.25rem}${P} .pb-8.pt-8{padding-top:1.25rem;padding-bottom:1.25rem}${P} #format .mt-12{margin-top:2rem}${P} #format .gap-10{gap:1.5rem}${P} #format .title-gap{margin-top:1.5rem}}` +
   `@media (min-width:64rem){${P} .sya-narrow{max-width:236px}}`; /* только в 4-колоночной сетке */
 css = minifyCss(`${css}\n${embedCss}`);
 if (css.includes("</style")) fail("CSS содержит </style: инлайн-стиль так не вставить");
