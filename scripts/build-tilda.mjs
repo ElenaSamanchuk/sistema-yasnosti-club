@@ -34,6 +34,7 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { getAudioclubContentBlock } from "./audioclub-content.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -287,6 +288,59 @@ js = patch(
   "вторая кнопка в hero"
 );
 
+const OCTOBER_PATCHES = !flag("no-october");
+if (OCTOBER_PATCHES) {
+  // 5d. контент октября 2026 (тема, выпуски, цены, FAQ)
+  {
+    const start = js.indexOf("zt=[");
+    const end = js.indexOf(",Pe=kn(dH)");
+    if (start < 0 || end < 0) fail("блок zt/dH — обновите audioclub-content.mjs или структуру сборки");
+    js = js.slice(0, start) + getAudioclubContentBlock() + js.slice(end);
+  }
+
+  // 5e. hero: подводка под темой месяца (между блоком темы и списком преимуществ)
+  js = patch(
+    js,
+    /k\("span",OP,o\(y\(e\)\.themeTail\),1\)\]\)\]\),k\("ul",HP,/,
+    'k("span",OP,o(y(e).themeTail),1)])]),k("p",{class:"sya-theme-intro mx-auto text-center text-body-sm italic leading-[1.55] tracking-brand text-text-2"},o(y(e).themeIntro),1),k("ul",HP,',
+    "hero: themeIntro"
+  );
+
+  // 5f. выпуски: подпись-пояснение и «Послушать в боте» на 01–02
+  {
+    const epType = 'k("span",yx,o(H.type),1)';
+    const epTypeNew =
+      'k("span",{class:"sya-ep-type mt-1 block text-caption leading-[1.45] tracking-brand text-text-2"},o(H.type),1),H.botHref?k("a",{href:H.botHref,target:"_blank",rel:"noopener",class:"sya-bot-cta"},o(H.botLabel||"Послушать в боте"),1):NA()';
+    if (!js.includes(epType)) fail("TopicsSection: подпись выпуска");
+    js = js.replace(epType, epTypeNew);
+    // botNote — в белой карточке, над строкой flipHint (не внутри flex-row Lu и не у пластинки)
+    js = patch(
+      js,
+      /k\("div",(\w+),\[k\("p",(\w+),o\(y\(e\)\.flipHint\),1\)/,
+      'y(e).botNote?k("p",{class:"sya-topics-botnote mt-4 px-1 text-body-sm leading-[1.5] tracking-brand text-text-2 text-center"},o(y(e).botNote),1):NA(),k("div",$1,[k("p",$2,o(y(e).flipHint),1)',
+      "TopicsSection: botNote"
+    );
+    js = patch(
+      js,
+      /class:"grid grid-cols-\[auto_1fr\] items-baseline gap-x-5 border-t border-muted\/20 py-5"/,
+      'class:"sya-ep-row grid grid-cols-[auto_1fr] items-start gap-x-5 border-t border-muted/20 py-4 md:py-5"',
+      "TopicsSection: строка выпуска"
+    );
+  }
+
+  // 5g0. список «что входит» в #price — 3 пункта (условия переехали под цену по ТЗ)
+  js = patch(js, /"mx-auto mt-10 grid max-w-\[620px\] grid-cols-1 gap-x-10 gap-y-5 text-left sm:grid-cols-2"/,
+    '"sya-price-list mx-auto mt-10 grid max-w-[860px] grid-cols-1 gap-x-10 gap-y-5 text-left md:grid-cols-3"', "SubscribeSection: список в 3 колонки");
+
+  // 5g. блок #price: сноска «действующим 29 €» + плашка «засчитываем в курс» (ТЗ: сноска ИЛИ плашки — оставили сноску, без повтора цены)
+  js = patch(
+    js,
+    /k\("p",mx,\[k\("span",Rx,o\(y\(e\)\.amount\),1\),k\("span",Nx,o\(y\(e\)\.period\),1\)\]\),k\("a",\{href:y\(e\)\.cta\.href/,
+    'k("p",mx,[k("span",Rx,o(y(e).amount),1),k("span",Nx,o(y(e).period),1)]),k("ul",{class:"sya-price-badges"},[k("li",{class:"sya-price-badge is-new"},[k("span",{class:"sya-price-badge-l"},o(y(e).badges[0].label),1),k("span",{class:"sya-price-badge-v"},o(y(e).badges[0].value),1)]),k("li",{class:"sya-price-badge"},[k("span",{class:"sya-price-badge-l"},o(y(e).badges[1].label),1),k("span",{class:"sya-price-badge-v"},o(y(e).badges[1].value),1)])]),k("div",{class:"sya-price-notes"},[k("p",null,o(y(e).existingNote),1),k("p",null,o(y(e).terms),1)]),y(e).coursePerk?k("p",{class:"sya-course-note"},o(y(e).coursePerk),1):NA(),k("a",{href:y(e).cta.href',
+    "SubscribeSection: сноска для действующих и плашка про курс"
+  );
+}
+
 // 6. плеер: прогресс идёт от реального воспроизведения (общее состояние __syaPlayer)
 js = patch(
   js,
@@ -344,6 +398,7 @@ const prelude =
   `if(boot())return;document.addEventListener("DOMContentLoaded",boot);` +
   `var iv=setInterval(function(){if(boot()||++n>200)clearInterval(iv)},50)}`;
 js = `(function(){"use strict";${prelude}\n${js.trim()}\n;${runtime}\n})();`;
+if (flag("debug-premin")) fs.writeFileSync(path.join(ROOT, "debug-premin.js"), js);
 js = minifyJs(js);
 
 // ---------- CSS ----------
@@ -424,6 +479,26 @@ const embedCss =
   // вторичная кнопка: контур вместо заливки, чтобы не спорить с основной
   `${P} .btn-outline{background:none;color:var(--color-brown);box-shadow:inset 0 0 0 1px #938d8466;transition:color .2s,box-shadow .2s}` +
   `${P} .btn-outline:hover{color:var(--color-olive);box-shadow:inset 0 0 0 1px var(--color-olive)}` +
+  `${P} .sya-theme-intro{display:block;max-width:34rem;margin-inline:auto;margin-top:.75rem;margin-bottom:1.25rem;padding:0;font-weight:400;font-style:italic;text-align:center;line-height:1.55;color:var(--color-text-2);text-wrap:pretty}` +
+  `${P} .sya-ep-type{max-width:36rem;overflow-wrap:anywhere}` +
+  // «Послушать в боте»: мягкая плашка, тап-зона 44 px за счёт ::after, не спорит с основной кнопкой
+  `${P} .sya-bot-cta{position:relative;display:inline-flex;align-items:center;gap:.45rem;margin-top:.6rem;padding:.4rem .85rem .4rem .45rem;border-radius:9999px;font-size:.8125rem;font-weight:500;line-height:1.2;letter-spacing:-.01em;color:var(--color-brown);background:color-mix(in srgb,var(--color-olive) 14%,transparent);text-decoration:none;transition:background-color .2s,color .2s}` +
+  `${P} .sya-bot-cta::before{content:"";flex:none;width:1.25rem;height:1.25rem;border-radius:50%;background:var(--color-olive) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 11'%3E%3Cpath d='M9 5.5 1 10V1z' fill='%23fff'/%3E%3C/svg%3E") 57% 50%/.5rem no-repeat}` +
+  `${P} .sya-bot-cta::after{content:"";position:absolute;inset:-6px -4px}` +
+  `@media (hover:hover){${P} .sya-bot-cta:hover{background:color-mix(in srgb,var(--color-olive) 24%,transparent)}}` +
+  `${P} .sya-topics-botnote{margin-inline:auto;max-width:100%;text-align:center;overflow-wrap:anywhere}` +
+  `@media (min-width:640px){${P} .sya-topics-botnote{text-align:left;margin-top:1.5rem}}` +
+  // плашка «засчитываем в курс» — выделена по ТЗ, но тише основной кнопки
+  `${P} .sya-price-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:.625rem;margin:1.1rem auto 0;padding:0;list-style:none}` +
+  `${P} .sya-price-badge{display:inline-flex;align-items:baseline;gap:.4rem;padding:.55rem 1.1rem;border-radius:9999px;font-size:.875rem;line-height:1.2;color:var(--color-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-bg) 35%,transparent)}` +
+  `${P} .sya-price-badge.is-new{background:var(--color-olive);box-shadow:none}` +
+  `${P} .sya-price-badge-l{opacity:.8}` +
+  `@media (max-width:359px){${P} .sya-price-badges{gap:.5rem}${P} .sya-price-badge{padding:.5rem .8rem;font-size:.8125rem}}` +
+  `${P} .sya-price-badge-v{font-weight:600}` +
+  `${P} .sya-price-notes{max-width:30rem;margin:.9rem auto 0;font-size:.8125rem;line-height:1.5;color:color-mix(in srgb,var(--color-bg) 70%,transparent)}` +
+  `${P} .sya-price-notes p+p{margin-top:.15rem}` +
+  `${P} .sya-course-note{display:flex;align-items:center;gap:.75rem;max-width:32rem;margin:1.75rem auto 0;padding:.9rem 1.25rem .9rem 1rem;text-align:left;font-size:.875rem;line-height:1.45;font-weight:500;color:var(--color-bg);background:color-mix(in srgb,var(--color-olive) 22%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-olive) 60%,transparent);border-radius:14px}` +
+  `${P} .sya-course-note::before{content:"";flex:none;width:2rem;height:2rem;border-radius:50%;background:var(--color-olive) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17' fill='none'%3E%3Cpath d='M2.5 9l4 4 8-9' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/1rem no-repeat}` +
   `@media (min-width:64rem){${P} .sya-narrow{max-width:236px}}`; /* только в 4-колоночной сетке */
 css = minifyCss(`${css}\n${embedCss}`);
 if (css.includes("</style")) fail("CSS содержит </style: инлайн-стиль так не вставить");
