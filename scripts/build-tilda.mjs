@@ -360,6 +360,22 @@ if (OCTOBER_PATCHES) {
     js = js.replace(re, "$2,$1,$4,$5mt-6$6,$3");
   }
 
+  // 5g3. блок цены по Анастасии (08.10): плашка «Действующим 29 €» над заголовком, без «Новым 35 €»;
+  //      «засчитываем в курс» над ценой; под кнопкой только «Если списание не прошло…»
+  {
+    const badges = js.match(/k\("ul",\{class:"sya-price-badges"\}.*?badges\[1\]\.value\),1\)\]\)\]\),/);
+    if (!badges) fail("SubscribeSection: плашки Новым/Действующим");
+    js = js.replace(badges[0], "");
+    const perk = 'y(e).coursePerk?k("p",{class:"sya-course-note"},o(y(e).coursePerk),1):NA(),';
+    const price = /(k\("p",mx,\[k\("span",Rx,o\(y\(e\)\.amount\),1\),k\("span",Nx,o\(y\(e\)\.period\),1\)\]\)),/;
+    if (!js.includes(perk) || !price.test(js)) fail("SubscribeSection: перенос плашки «в курс»");
+    js = js.replace(perk, "").replace(price, perk + "$1,");
+    js = patch(js, /k\("p",\{class:"sya-price-notes"\},o\(y\(e\)\.existingNote\+"\. "\+y\(e\)\.terms\),1\)/,
+      'k("p",{class:"sya-price-notes"},o(y(e).terms),1)', "SubscribeSection: сноска под кнопкой");
+    js = patch(js, /k\("h2",(\w+),o\(y\((\w)\)\.title\),1\),k\("ul",Yx,/,
+      'k("p",{class:"sya-price-existing"},o(y(e).existingTag),1),k("h2",$1,o(y($2).title),1),k("ul",Yx,', "SubscribeSection: плашка для действующих");
+  }
+
 // 6. плеер: прогресс идёт от реального воспроизведения (общее состояние __syaPlayer)
 js = patch(
   js,
@@ -520,19 +536,21 @@ const embedCss =
   `@media (max-width:359px){${P} .sya-price-badges{gap:.5rem}${P} .sya-price-badge{padding:.5rem .8rem;font-size:.8125rem}}` +
   `${P} .sya-price-badge-v{font-weight:600}` +
   `${P} .sya-price-notes{max-width:28rem;margin:1rem auto 0;font-size:.75rem;line-height:1.5;color:color-mix(in srgb,var(--color-bg) 58%,transparent)}` +
-    `${P} .sya-course-note{display:flex;width:fit-content;align-items:center;gap:.55rem;max-width:26rem;margin:1.1rem auto 0;padding:.5rem .95rem .5rem .55rem;text-align:left;font-size:.8125rem;line-height:1.35;font-weight:500;color:var(--color-bg);background:color-mix(in srgb,var(--color-olive) 20%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-olive) 55%,transparent);border-radius:12px}` +
-  `${P} .sya-course-note::before{content:"";flex:none;width:1.4rem;height:1.4rem;border-radius:50%;background:var(--color-olive) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17' fill='none'%3E%3Cpath d='M2.5 9l4 4 8-9' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/.75rem no-repeat}` +
-  `${P} .sya-course-note{max-width:19.5rem;padding:.45rem .9rem .45rem .5rem;font-size:.75rem;line-height:1.35;gap:.5rem;border-radius:10px}${P} .sya-course-note::before{width:1.15rem;height:1.15rem;background-size:.65rem}` +
+    `${P} .sya-course-note{display:flex;width:fit-content;align-items:center;gap:.6rem;max-width:21rem;margin:2.25rem auto 0;padding:.55rem 1.1rem .55rem .6rem;text-align:left;font-size:var(--text-body);line-height:1.35;letter-spacing:var(--tracking-brand);color:var(--color-bg);background:color-mix(in srgb,var(--color-olive) 20%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-olive) 55%,transparent);border-radius:12px}` +
+  `${P} .sya-course-note+p{margin-top:1.25rem}` +
+  `@media (min-width:768px){${P} .sya-course-note{max-width:none;white-space:nowrap;border-radius:9999px}}` +
+  `${P} .sya-course-note::before{content:"";flex:none;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--color-olive) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17' fill='none'%3E%3Cpath d='M2.5 9l4 4 8-9' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/.75rem no-repeat}` +
   // телефон: ужать воздух в блоках разработчика (Елена 08.10: «отступы конские»)
   `@media (max-width:767px){${P} .gap-7.px-8.py-10{gap:1.25rem;padding:1.75rem 1.25rem}${P} .pb-8.pt-8{padding-top:1.25rem;padding-bottom:1.25rem}${P} #format .mt-12{margin-top:2rem}${P} #format .gap-10{gap:1.5rem}${P} #format .title-gap{margin-top:1.5rem}${P} .leading-\\[1\\.55\\]{line-height:1.42}${P} .leading-\\[1\\.6\\]{line-height:1.45}${P} .pb-8.pt-8.gap-1{gap:.45rem}}` +
-  // мини-плашка «в курс» на телефоне — уже кнопки, последним правилом (перебивает базовое)
-  `@media (max-width:767px){${P} .sya-course-note{max-width:15rem;gap:.4rem;margin-top:.9rem;padding:.35rem .7rem .35rem .4rem;font-size:.6875rem;line-height:1.35;border-radius:9px}${P} .sya-course-note::before{width:1rem;height:1rem;background-size:.55rem}}` +
   `@media (max-width:767px){${P} #price ul.grid{margin-top:2rem;row-gap:.75rem}}` +
   // галочки списков по центру первой строки (замер: были ниже на 2 и 4 px)
   `${P} section:first-of-type ul>li>svg{margin-top:1px}${P} #price ul.grid>li>svg{margin-top:0}` +
   `@media (max-width:767px){${P} section:first-of-type ul>li>svg{margin-top:.5px}${P} #price ul.grid>li>svg{margin-top:-.5px}}` +
   // строка «Тема октября» на деске уже, перенос ровный
   `@media (min-width:768px){${P} .divider-dot+p{max-width:25rem;margin-inline:auto;text-wrap:balance}}` +
+  `${P} .sya-price-existing{display:table;margin:0 auto 1.25rem;padding:.4rem 1rem;border-radius:9999px;font-size:.875rem;line-height:1.3;letter-spacing:var(--tracking-brand);color:var(--color-bg);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-bg) 35%,transparent)}` +
+  `@media (max-width:767px){${P} .sya-price-existing{font-size:.8125rem;padding:.35rem .85rem;margin-bottom:1rem}}` +
+  `@media (max-width:359px){${P} .sya-price-existing{font-size:.75rem;padding:.3rem .75rem}${P} .sya-course-note{font-size:.8125rem;gap:.45rem;padding:.45rem .8rem .45rem .45rem}${P} .sya-course-note::before{width:1.25rem;height:1.25rem}}` +
   `@media (min-width:64rem){${P} .sya-narrow{max-width:236px}}`; /* только в 4-колоночной сетке */
 css = minifyCss(`${css}\n${embedCss}`);
 if (css.includes("</style")) fail("CSS содержит </style: инлайн-стиль так не вставить");
