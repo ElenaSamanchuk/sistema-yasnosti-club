@@ -129,7 +129,9 @@ else {
 }
 console.log("источник:", path.relative(ROOT, sourcePath));
 const html = fs.readFileSync(sourcePath, "utf8");
-const title = ((html.match(/<title>([^<]*)<\/title>/) || [])[1] || "Аудиоклуб").trim();
+const title = flag("no-october")
+  ? ((html.match(/<title>([^<]*)<\/title>/) || [])[1] || "Аудиоклуб").trim()
+  : "Аудиоклуб EGOISTIC · Деньги в паре";
 const cssRaw = must(html.match(/<style[^>]*>([\s\S]*?)<\/style>/), "<style>")[1];
 let js = must(html.match(/<script type="module"[^>]*>([\s\S]*?)<\/script>/), '<script type="module">')[1];
 
@@ -290,7 +292,11 @@ js = patch(
 
 const OCTOBER_PATCHES = !flag("no-october");
 if (OCTOBER_PATCHES) {
-  // 5d. контент октября 2026 (тема, выпуски, цены, FAQ)
+  // Обложка темы — иллюстрация, а не портрет автора.
+  js = patch(js, /src:(\w+)\.photo,alt:"Тамара Поданёва"/,
+    'src:$1.photo,alt:"Обложка темы «Деньги в паре»: женщина и мужчина, покрытый банкнотами"',
+    "PlayerCard: alt обложки темы");
+  // Контент текущего месяца; оформление октябрьского обновления сохранено.
   {
     const start = js.indexOf("zt=[");
     const end = js.indexOf(",Pe=kn(dH)");
